@@ -256,7 +256,7 @@ button:hover {
         border-radius: 20px;
     }
 }
-/* Ocultar el texto "¿No tienes cuenta?" */
+/* --- Ocultar texto --- */
 #register-toggle.hidden {
     display: none;
 }

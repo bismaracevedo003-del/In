@@ -1,15 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Inicio - Café Sostenible</title>
     <link rel="stylesheet" href="/css/inicio.css">
-    <link rel="icon" href="/img/IMG_6194.PNG">
+    
+    <!-- FAVICONS -->
+    <link rel="icon" type="image/png" sizes="96x96" href="/img/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
 </head>
 <body>
-     <h1>Bienvenido, {{ username }}</h1>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo-section">
+            <img src="/img/IMG_6194.PNG" alt="Logo" class="logo-img">
+            <div class="title-group">
+                <h1 class="main-title">CAFÉ SOSTENIBLE</h1>
+                <p class="subtitle">Café Sostenible Caficultura</p>
+            </div>
+        </div>
+        <a href="#" class="news-link">Noticias</a>
+    </header>
 
+    <div class="main-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active">
+                    <img src="/img/icon-home.svg" alt="Inicio" class="nav-icon">
+                    <span>Inicio</span>
+                </a>
+                <a href="/calculadora" class="nav-item">
+                    <img src="/img/icon-calculator.svg" alt="Calculadora" class="nav-icon">
+                    <span>Calculadora de huella de carbono</span>
+                </a>
+                <a href="/historial" class="nav-item">
+                    <img src="/img/icon-history.svg" alt="Historial" class="nav-icon">
+                    <span>Historial</span>
+                </a>
+                <a href="/perfil" class="nav-item">
+                    <img src="/img/icon-profile.svg" alt="Perfil" class="nav-icon">
+                    <span>Perfil</span>
+                </a>
+                <a href="/logout" class="logout-btn">Cerrar sesión</a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="content">
+            <h2>Bienvenido, <span id="username">cargando...</span></h2>
+            <div class="cards-grid">
+                <a href="/calculadora" class="card">
+                    <img src="/img/icon-calculator.svg" alt="Calculadora">
+                </a>
+                <a href="/historial" class="card">
+                    <img src="/img/icon-history.svg" alt="Historial">
+                </a>
+                <a href="/perfil" class="card">
+                    <img src="/img/icon-profile.svg" alt="Perfil">
+                </a>
+            </div>
+        </main>
+    </div>
 
     <script src="/js/inicio.js"></script>
 </body>

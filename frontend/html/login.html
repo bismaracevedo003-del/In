@@ -3,23 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login / Registro</title>
     <link rel="stylesheet" href="/css/login.css">
     <link rel="icon" type="image/png" href="/img/IMG_6194.png">
 </head>
 <body>
-    <div class="login-container">
-        <h1>Iniciar Sesión</h1>
-        <form action="/login" method="POST">
-            <label for="username">Usuario</label>
-            <input type="text" id="username" name="username" required>
+    <div class="login-card">
+        <!-- LADO IZQUIERDO: Logo + texto -->
+        <div class="logo-panel">
+            <div class="logo">
+                <img src="/img/IMG_6194.PNG" alt="Logo Café Sostenible">
+            </div>
+            <div class="divider"></div>
+            <div class="brand-title">CAFÉ SOSTENIBLE</div>
+            <div class="brand-subtitle">Café Sostenible Caficultura</div>
+        </div>
 
-            <label for="password">Contraseña</label>
-            <input type="password" id="password" name="password" required>
+        <!-- LADO DERECHO: Formularios -->
+        <div class="form-panel">
+            <div id="message-box"></div>
 
-            <button type="submit">Entrar</button>
-        </form>
+            <h1>Iniciar Sesión</h1>
+
+            <form id="login-form">
+                <labeled-input>
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" name="username" required><br>
+                </labeled-input>
+
+                <labeled-input>
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" required>
+                </labeled-input>
+
+                <button type="submit">Entrar</button>
+            </form>
+
+              <p class="toggle-register" id="register-toggle">
+              ¿No tienes cuenta? <a href="#" id="show-register">Regístrate aquí</a>
+              </p>
+
+            <!-- Registro desplegable -->
+            <div id="register-section" class="register-section">
+                <h2>Registrarse</h2><br>
+                <form id="register-form">
+                    <labeled-input>
+                        <label for="reg_username">Usuario</label>
+                        <input type="text" id="reg_username" name="username" required>
+                    </labeled-input>
+
+                    <labeled-input>
+                        <br><label for="reg_password">Contraseña</label>
+                        <input type="password" id="reg_password" name="password" required>
+                    </labeled-input>
+
+                    <labeled-input>
+                        <br><label for="reg_code">Código de Asociado</label>
+                        <input type="text" id="reg_code" name="codigo_asociado" required>
+                    </labeled-input>
+
+                    <button type="submit">Registrar</button>
+                </form>
+
+                <p class="toggle-register">
+                    <a href="#" id="show-login">Volver al inicio de sesión</a>
+                </p>
+            </div>
+        </div>
     </div>
+
     <script src="/js/login.js"></script>
 </body>
 </html>

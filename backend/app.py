@@ -73,7 +73,6 @@ def login():
 
     user = User.query.filter_by(username=username, password_hash=password_hash).first()
     if user:
-        # Aquí ya no necesitamos session
         return jsonify({"status": "success", "redirect": "/inicio"})
     else:
         return jsonify({"status": "error", "message": "Usuario o contraseña incorrectos"})

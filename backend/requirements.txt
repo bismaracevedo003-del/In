@@ -1,3 +1,8 @@
-Flask==2.3.4
-Flask-SQLAlchemy==3.0.5
-pyodbc==5.1.0
+flask
+flask_sqlalchemy
+pyodbc
+sqlalchemy
+gunicorn
+pymssql
+flask_cors
+dotenv

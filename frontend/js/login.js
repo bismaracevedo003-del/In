@@ -1,4 +1,3 @@
-// /js/login.js
 document.addEventListener('DOMContentLoaded', () => {
     // === Elementos del DOM ===
     const loginForm = document.getElementById('login-form');

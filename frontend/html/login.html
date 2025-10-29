@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login / Registro</title>
+
+    <!-- ESTILOS -->
     <link rel="stylesheet" href="/css/login.css">
-    <link rel="icon" tipo="image/png" href="/img/favicon-96x96.png" tamaños="96x96" />
-<link rel="icon" type="image/svg+xml" href="/img/favicon.svg" />
-<link rel="icono de acceso directo" href="/img/favicon.ico" />
-<link rel="apple-touch-icon" tamaños="180x180" href="/img/apple-touch-icon.png" />
-<meta name="apple-mobile-web-app-title" content="MyWebSite" />
-<link rel="manifest" href="/site.webmanifest" />
+
+    <!-- FAVICONS -->
+    <link rel="icon" type="image/png" sizes="96x96" href="/img/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="apple-mobile-web-app-title" content="Café Sostenible">
 </head>
+
 <body>
+    <!-- TARJETA PRINCIPAL -->
     <div class="login-card">
-        <!-- LADO IZQUIERDO: Logo + texto -->
+
+        <!-- PANEL IZQUIERDO: MARCA -->
         <div class="logo-panel">
             <div class="logo">
                 <img src="/img/IMG_6194.PNG" alt="Logo Café Sostenible">
@@ -24,16 +31,19 @@
             <div class="brand-subtitle">Café Sostenible Caficultura</div>
         </div>
 
-        <!-- LADO DERECHO: Formularios -->
+        <!-- PANEL DERECHO: FORMULARIOS -->
         <div class="form-panel">
+
+            <!-- MENSAJE DE ESTADO -->
             <div id="message-box"></div>
 
+            <!-- FORMULARIO DE INICIO DE SESIÓN -->
             <h1>Iniciar Sesión</h1>
 
             <form id="login-form">
                 <labeled-input>
                     <label for="username">Usuario</label>
-                    <input type="text" id="username" name="username" placeholder="Ingerse su usuario" required>
+                    <input type="text" id="username" name="username" placeholder="Ingrese su usuario" required>
                 </labeled-input>
 
                 <labeled-input>
@@ -44,11 +54,12 @@
                 <button type="submit">Entrar</button>
             </form>
 
+            <!-- ENLACE A REGISTRO -->
             <p class="toggle-register" id="register-toggle">
                 ¿No tienes cuenta? <a href="#" id="show-register">Regístrate aquí</a>
             </p>
 
-            <!-- Registro desplegable -->
+            <!-- SECCIÓN DE REGISTRO (OCULTA POR DEFECTO) -->
             <div id="register-section" class="register-section">
                 <h2>Registrarse</h2>
 
@@ -71,6 +82,7 @@
                     <button type="submit">Registrar</button>
                 </form>
 
+                <!-- VOLVER AL LOGIN -->
                 <p class="toggle-register">
                     <a href="#" id="show-login">Volver al inicio de sesión</a>
                 </p>
@@ -78,6 +90,7 @@
         </div>
     </div>
 
+    <!-- SCRIPT PRINCIPAL -->
     <script src="/js/login.js"></script>
 </body>
 </html>

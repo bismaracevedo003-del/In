@@ -1,16 +1,21 @@
-from flask import Flask, send_from_directory, request, redirect, url_for, flash, jsonify, session, render_template, abort
+from flask import Flask, send_from_directory, request, redirect, url_for, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 import os
 import hashlib
 
+# --- INICIALIZACIÓN ---
 app = Flask(__name__, static_folder='../frontend')
-app.secret_key = "clave_segura_flask_2025"  # Cambia esto en producción
+app.secret_key = "clave_segura_flask_2025"  # Cambia en producción
 
-# --- Configuración de rutas ---
+# --- RUTAS ---
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, '..', 'frontend')
+HTML_DIR = os.path.join(FRONTEND_DIR, 'html')
+CSS_DIR = os.path.join(FRONTEND_DIR, 'css')
+JS_DIR = os.path.join(FRONTEND_DIR, 'js')
+IMG_DIR = os.path.join(FRONTEND_DIR, 'img')
 
-# --- Configuración de SQL Server ---
+# --- CONFIGURACIÓN DE BASE DE DATOS ---
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     "mssql+pymssql://bismar-ac_SQLLogin_1:uex7yg16hs@"
     "MQ135esp8266.mssql.somee.com/MQ135esp8266"
@@ -23,7 +28,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 db = SQLAlchemy(app)
 
-# --- Modelos ---
+# --- MODELOS ---
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -36,15 +41,22 @@ class Finca(db.Model):
     nombre = db.Column(db.String(100), nullable=False)
     codigo_hash = db.Column(db.String(255), nullable=False, unique=True)
 
-# --- Crear tablas ---
+# --- CREAR TABLAS (SEGURAMENTE) ---
 with app.app_context():
-    db.create_all()
+    try:
+        # Intenta conectar
+        db.engine.execute("SELECT 1")
+        db.create_all()
+        print("Base de datos conectada y tablas verificadas.")
+    except Exception as e:
+        print(f"Advertencia: No se pudo conectar a la BD: {e}")
+        print("   → Asegúrate de haber creado las tablas manualmente en Somee.com")
 
-# --- Función de hash ---
+# --- FUNCIÓN HASH ---
 def hash_text(text):
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
-# --- Decorador de login requerido ---
+# --- DECORADOR LOGIN ---
 def login_required(f):
     from functools import wraps
     @wraps(f)
@@ -54,30 +66,39 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# --- Rutas de frontend ---
+# --- RUTAS FRONTEND ---
 @app.route('/')
 def index():
-    return send_from_directory(os.path.join(FRONTEND_DIR, 'html'), 'login.html')
+    """Página pública si no hay sesión, redirige a inicio si hay sesión"""
+    if 'user_id' in session:
+        return redirect(url_for('inicio'))
+    return send_from_directory(HTML_DIR, 'index.html')  # ← nueva página
 
 @app.route('/inicio')
 @login_required
 def inicio():
-    user = User.query.get(session['user_id'])
-    return send_from_directory(os.path.join(FRONTEND_DIR, 'html'), 'inicio.html')
+    """Dashboard del usuario"""
+    return send_from_directory(HTML_DIR, 'inicio.html')
 
+# --- ESTÁTICOS ---
 @app.route('/css/<path:filename>')
 def css(filename):
-    return send_from_directory(os.path.join(FRONTEND_DIR, 'css'), filename)
+    return send_from_directory(CSS_DIR, filename)
 
 @app.route('/js/<path:filename>')
 def js(filename):
-    return send_from_directory(os.path.join(FRONTEND_DIR, 'js'), filename)
+    return send_from_directory(JS_DIR, filename)
 
 @app.route('/img/<path:filename>')
 def img(filename):
-    return send_from_directory(os.path.join(FRONTEND_DIR, 'img'), filename)
+    return send_from_directory(IMG_DIR, filename)
 
-# --- LOGIN ---
+# --- API ---
+@app.route('/login')
+def login_page():
+    """Muestra el formulario de login"""
+    return send_from_directory(HTML_DIR, 'login.html')
+
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username')
@@ -96,7 +117,6 @@ def login():
     else:
         return jsonify({"status": "error", "message": "Usuario o contraseña incorrectos"}), 401
 
-# --- REGISTRO ---
 @app.route('/register', methods=['POST'])
 def register():
     username = request.form.get('username')
@@ -106,17 +126,14 @@ def register():
     if not all([username, password, codigo_asociado]):
         return jsonify({"status": "error", "message": "Todos los campos son obligatorios"}), 400
 
-    # Verificar código de asociado
     codigo_hash = hash_text(codigo_asociado)
     finca = Finca.query.filter_by(codigo_hash=codigo_hash).first()
     if not finca:
         return jsonify({"status": "error", "message": "Código de asociado inválido"}), 400
 
-    # Verificar si el usuario ya existe
     if User.query.filter_by(username=username).first():
         return jsonify({"status": "error", "message": "El usuario ya existe"}), 400
 
-    # Crear usuario
     new_user = User(username=username, password_hash=hash_text(password))
     db.session.add(new_user)
     db.session.commit()
@@ -127,16 +144,14 @@ def register():
 @login_required
 def api_user():
     user = User.query.get(session['user_id'])
-    return jsonify({
-        "username": user.username
-    })
+    return jsonify({"username": user.username})
 
-# --- LOGOUT ---
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
 
-# --- Ejecutar ---
+# --- EJECUTAR ---
 if __name__ == "__main__":
+    print("Servidor iniciado en http://localhost:5000")
     app.run(debug=True, port=5000)

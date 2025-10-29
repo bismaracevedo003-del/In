@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login / Registro</title>
+    <title>Iniciar Sesión - Café Sostenible</title>
 
     <!-- ESTILOS -->
     <link rel="stylesheet" href="/css/login.css">
@@ -61,24 +61,55 @@
 
             <!-- SECCIÓN DE REGISTRO (OCULTA POR DEFECTO) -->
             <div id="register-section" class="register-section">
-                <h2>Registrarse</h2>
+                <h2>Registrarse</h2><br>
 
-                <form id="register-form">
+                <form id="register-form" enctype="multipart/form-data">
+                    <!-- NOMBRE -->
+                    <labeled-input>
+                        <label for="reg_nombre">Nombre</label>
+                        <input type="text" id="reg_nombre" name="nombre" placeholder="Tu nombre" required>
+                    </labeled-input>
+
+                    <!-- APELLIDO -->
+                    <labeled-input>
+                        <label for="reg_apellido">Apellido</label>
+                        <input type="text" id="reg_apellido" name="apellido" placeholder="Tu apellido" required>
+                    </labeled-input>
+
+                    <!-- USUARIO -->
                     <labeled-input>
                         <label for="reg_username">Usuario</label>
                         <input type="text" id="reg_username" name="username" placeholder="Elige un usuario" required>
                     </labeled-input>
 
+                    <!-- CONTRASEÑA -->
                     <labeled-input>
                         <label for="reg_password">Contraseña</label>
                         <input type="password" id="reg_password" name="password" placeholder="Mínimo 6 caracteres" required>
                     </labeled-input>
 
+                    <!-- CÓDIGO DE ASOCIADO -->
                     <labeled-input>
                         <label for="reg_code">Código de Asociado</label>
                         <input type="text" id="reg_code" name="codigo_asociado" placeholder="Ej: ASOC-1234" required>
                     </labeled-input>
 
+                    <!-- FOTO DE PERFIL -->
+                    <labeled-input>
+                        <label for="reg_foto">Foto de Perfil</label>
+                        <input type="file" id="reg_foto" name="foto_perfil" accept="image/*">
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 4px;">
+                            Opcional. Máx 5MB. PNG, JPG, WEBP, GIF
+                        </small>
+                    </labeled-input>
+
+                    <!-- VISTA PREVIA DE FOTO -->
+                    <div id="foto-preview-container" style="margin: 16px 0; text-align: center; display: none;">
+                        <img id="foto-preview" src="" alt="Vista previa" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #95d5b2;">
+                        <p style="margin-top: 8px; font-size: 14px; color: #2d6a4f;">Vista previa</p>
+                    </div>
+
+                    <!-- BOTÓN REGISTRAR -->
                     <button type="submit">Registrar</button>
                 </form>
 
@@ -87,8 +118,6 @@
                     <a href="#" id="show-login">Volver al inicio de sesión</a>
                 </p>
             </div>
-        </div>
-    </div>
 
     <!-- SCRIPT PRINCIPAL -->
     <script src="/js/login.js"></script>

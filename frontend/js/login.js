@@ -7,21 +7,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const showRegister = document.getElementById('show-register');
     const showLogin = document.getElementById('show-login');
     const registerToggle = document.getElementById('register-toggle');
+    const fotoInput = document.getElementById('reg_foto');
+    const previewContainer = document.getElementById('foto-preview-container');
+    const previewImg = document.getElementById('foto-preview');
 
     // === Mostrar mensaje con auto-ocultar ===
     const showMessage = (msg, type = 'error') => {
         messageBox.textContent = msg;
-        messageBox.className = type;
+        messageBox.className = `message ${type}`;
         messageBox.style.display = 'block';
 
         setTimeout(() => {
             messageBox.textContent = '';
-            messageBox.className = '';
+            messageBox.className = 'message';
             messageBox.style.display = 'none';
         }, 5000);
     };
 
-    // === LOGIN ===
+    // === LOGIN (CORREGIDO: credentials: 'include') ===
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -32,15 +35,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const formData = new FormData(loginForm);
-                const res = await fetch('/login', { method: 'POST', body: formData });
+                const res = await fetch('/login', { 
+                    method: 'POST', 
+                    body: formData,
+                    credentials: 'include'  // ¡CRUCIAL PARA COOKIES!
+                });
                 const data = await res.json();
 
-                showMessage(data.message, data.status);
+                showMessage(data.message || data.error, data.status || 'error');
 
                 if (data.status === 'success' && data.redirect) {
                     setTimeout(() => window.location.href = data.redirect, 800);
                 }
             } catch (err) {
+                console.error('Error de login:', err);
                 showMessage('Error de conexión. Intenta más tarde.', 'error');
             } finally {
                 submitBtn.disabled = false;
@@ -49,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === REGISTRO ===
+    // === REGISTRO (CORREGIDO: credentials: 'include') ===
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -60,16 +68,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const formData = new FormData(registerForm);
-                const res = await fetch('/register', { method: 'POST', body: formData });
+                const res = await fetch('/register', { 
+                    method: 'POST', 
+                    body: formData,
+                    credentials: 'include'  // ¡CRUCIAL!
+                });
                 const data = await res.json();
 
                 showMessage(data.message, data.status);
 
                 if (data.status === 'success') {
                     registerForm.reset();
-                    setTimeout(() => showLogin.click(), 1500);
+                    previewContainer.style.display = 'none'; // Resetear foto
+                    setTimeout(() => {
+                        // Cambiar a login visualmente
+                        registerSection.classList.remove('active');
+                        loginForm.classList.remove('hidden');
+                        registerToggle.classList.remove('hidden');
+                    }, 1500);
                 }
             } catch (err) {
+                console.error('Error de registro:', err);
                 showMessage('Error de conexión.', 'error');
             } finally {
                 submitBtn.disabled = false;
@@ -78,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === Mostrar/Ocultar Registro ===
+    // === Mostrar/Ocultar Registro (CORREGIDO) ===
     if (showRegister && registerSection && loginForm && registerToggle) {
         showRegister.addEventListener('click', (e) => {
             e.preventDefault();
@@ -96,6 +115,44 @@ document.addEventListener('DOMContentLoaded', () => {
             loginForm.classList.remove('hidden');
             registerToggle.classList.remove('hidden');
             showMessage('');
+            // Resetear vista previa
+            if (previewContainer) previewContainer.style.display = 'none';
+            if (fotoInput) fotoInput.value = '';
+        });
+    }
+
+    // === VISTA PREVIA DE FOTO (MEJORADO) ===
+    if (fotoInput && previewContainer && previewImg) {
+        fotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+
+            // Resetear
+            previewContainer.style.display = 'none';
+
+            if (!file) return;
+
+            // Validar tamaño
+            if (file.size > 5 * 1024 * 1024) {
+                showMessage('Imagen demasiado grande (máx 5MB)', 'error');
+                e.target.value = '';
+                return;
+            }
+
+            // Validar tipo
+            const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+            if (!allowed.includes(file.type)) {
+                showMessage('Formato no permitido. Usa PNG, JPG, WEBP o GIF.', 'error');
+                e.target.value = '';
+                return;
+            }
+
+            // Mostrar vista previa
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                previewImg.src = event.target.result;
+                previewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
         });
     }
 });

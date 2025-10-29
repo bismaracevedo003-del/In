@@ -3,6 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 import os
 import hashlib
 from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
+import uuid
+import base64
 
 # --- CARGAR VARIABLES DE ENTORNO ---
 load_dotenv()  # Carga .env automáticamente
@@ -12,7 +15,12 @@ app = Flask(__name__, static_folder='../frontend')
 
 # Clave secreta desde .env
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback_secret_key_dev")
-
+app.config['SECRET_KEY'] = os.getenv("FLASK_SECRET_KEY", "super-secret-key-dev")
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'      # Crucial para navegación
+app.config['SESSION_COOKIE_SECURE'] = False        # True en HTTPS
+app.config['SESSION_COOKIE_PATH'] = '/'
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600    # 1 hora
 # Debug desde .env
 app.config['DEBUG'] = os.getenv("FLASK_DEBUG", "False") == "True"
 
@@ -39,31 +47,26 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_recycle': 300,
 }
 
-db = SQLAlchemy(app)
+# --- IMPORTAR MODELOS ---
+from models import db, User, Finca
+db.init_app(app)
 
-# --- MODELOS ---
-class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), nullable=False, unique=True)
-    password_hash = db.Column(db.String(255), nullable=False)
-
-class Finca(db.Model):
-    __tablename__ = 'fincas'
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
-    codigo_hash = db.Column(db.String(255), nullable=False, unique=True)
-
-# --- CREAR TABLAS (SEGURAMENTE) ---
+# --- CREAR TABLAS (SEGURO Y COMPATIBLE) ---
 with app.app_context():
     try:
-        # Intenta conectar
-        db.engine.execute("SELECT 1")
+        # Verifica conexión con una consulta simple
+        db.session.execute(db.text("SELECT 1"))
+        db.session.commit()
+        print("Conexión a la base de datos exitosa.")
+        
+        # Crea tablas si no existen
         db.create_all()
-        print("Base de datos conectada y tablas verificadas.")
+        print("Tablas verificadas/creadas correctamente.")
+        
     except Exception as e:
-        print(f"Advertencia: No se pudo conectar a la BD: {e}")
-        print("   → Asegúrate de haber creado las tablas manualmente en Somee.com")
+        print(f"No se pudo conectar a la base de datos: {e}")
+        print("   → Crea las tablas manualmente en Somee.com o revisa las credenciales.")
+        print("   → Asegúrate de que pymssql esté instalado: pip install pymssql")
 
 # --- FUNCIÓN HASH ---
 def hash_text(text):
@@ -112,6 +115,11 @@ def login_page():
     """Muestra el formulario de login"""
     return send_from_directory(HTML_DIR, 'login.html')
 
+@app.route('/perfil')
+@login_required
+def perfil():
+    return send_from_directory(HTML_DIR, 'perfil.html')
+
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username')
@@ -124,8 +132,10 @@ def login():
     user = User.query.filter_by(username=username, password_hash=password_hash).first()
 
     if user:
+        # GUARDAR SESIÓN
         session['user_id'] = user.id
         session['username'] = user.username
+        print(f"Login exitoso: {user.username} (ID: {user.id})")  # DEBUG
         return jsonify({"status": "success", "redirect": "/inicio"})
     else:
         return jsonify({"status": "error", "message": "Usuario o contraseña incorrectos"}), 401
@@ -134,12 +144,18 @@ def login():
 def register():
     username = request.form.get('username')
     password = request.form.get('password')
-    codigo_asociado = request.form.get('codigo_asociado')
+    nombre = request.form.get('nombre')
+    apellido = request.form.get('apellido')
+    codigo_asociado = request.form.get('codigo_asociado')  # texto plano
+    foto = request.files.get('foto_perfil')
 
-    if not all([username, password, codigo_asociado]):
+    if not all([username, password, nombre, apellido, codigo_asociado]):
         return jsonify({"status": "error", "message": "Todos los campos son obligatorios"}), 400
 
+    # HASHEAR CÓDIGO DE ASOCIADO
     codigo_hash = hash_text(codigo_asociado)
+
+    # VERIFICAR EN TABLA FINCAS
     finca = Finca.query.filter_by(codigo_hash=codigo_hash).first()
     if not finca:
         return jsonify({"status": "error", "message": "Código de asociado inválido"}), 400
@@ -147,17 +163,76 @@ def register():
     if User.query.filter_by(username=username).first():
         return jsonify({"status": "error", "message": "El usuario ya existe"}), 400
 
-    new_user = User(username=username, password_hash=hash_text(password))
+    # PROCESAR FOTO
+    foto_blob = None
+    foto_mime = 'image/png'
+    if foto and foto.filename:
+        if foto.content_length > 5 * 1024 * 1024:
+            return jsonify({"status": "error", "message": "Imagen demasiado grande"}), 400
+        if foto.mimetype not in {'image/png', 'image/jpeg', 'image/webp', 'image/gif'}:
+            return jsonify({"status": "error", "message": "Formato no permitido"}), 400
+        foto_blob = foto.read()
+        foto_mime = foto.mimetype
+
+    # CREAR USUARIO CON HASH
+    new_user = User(
+        username=username,
+        password_hash=hash_text(password),
+        nombre=nombre,
+        apellido=apellido,
+        codigo_asociado_hash=codigo_hash,  # HASH GUARDADO
+        foto_perfil=foto_blob,
+        foto_mime=foto_mime
+    )
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({"status": "success", "message": "Registro exitoso. Ahora puedes iniciar sesión."})
+    return jsonify({"status": "success", "message": "Registro exitoso"})
 
 @app.route('/api/user')
 @login_required
 def api_user():
     user = User.query.get(session['user_id'])
-    return jsonify({"username": user.username})
+    
+    # BUSCAR FINCA PARA OBTENER CÓDIGO PLANO
+    finca = Finca.query.filter_by(codigo_hash=user.codigo_asociado_hash).first()
+    codigo_plano = finca.codigo_original if finca else "Desconocido"
+
+    foto_base64 = None
+    if user.foto_perfil:
+        foto_base64 = base64.b64encode(user.foto_perfil).decode('utf-8')
+
+    return jsonify({
+        "username": user.username,
+        "nombre": user.nombre,
+        "apellido": user.apellido,
+        "codigo_asociado": codigo_plano,  # TEXTO PLANO
+        "foto_src": f"data:{user.foto_mime};base64,{foto_base64}" if foto_base64 else "/img/usuarios/default-user.png"
+    })
+
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return jsonify({"status": "error", "message": "Archivo demasiado grande"}), 413
+
+@app.route('/api/cambiar-foto', methods=['POST'])
+@login_required
+def cambiar_foto():
+    foto = request.files.get('foto_perfil')
+    if not foto or not foto.filename:
+        return jsonify({"status": "error", "message": "No se envió foto"}), 400
+
+    if foto.mimetype not in {'image/png', 'image/jpeg', 'image/webp', 'image/gif'}:
+        return jsonify({"status": "error", "message": "Formato no permitido"}), 400
+
+    foto_blob = foto.read()
+    user = User.query.get(session['user_id'])
+    user.foto_perfil = foto_blob
+    user.foto_mime = foto.mimetype
+    db.session.commit()
+
+    return jsonify({"status": "success", "message": "Foto actualizada"})
 
 @app.route('/logout')
 def logout():

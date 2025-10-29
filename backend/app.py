@@ -2,10 +2,19 @@ from flask import Flask, send_from_directory, request, redirect, url_for, jsonif
 from flask_sqlalchemy import SQLAlchemy
 import os
 import hashlib
+from dotenv import load_dotenv
+
+# --- CARGAR VARIABLES DE ENTORNO ---
+load_dotenv()  # Carga .env automáticamente
 
 # --- INICIALIZACIÓN ---
 app = Flask(__name__, static_folder='../frontend')
-app.secret_key = "clave_segura_flask_2025"  # Cambia en producción
+
+# Clave secreta desde .env
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback_secret_key_dev")
+
+# Debug desde .env
+app.config['DEBUG'] = os.getenv("FLASK_DEBUG", "False") == "True"
 
 # --- RUTAS ---
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -15,10 +24,14 @@ CSS_DIR = os.path.join(FRONTEND_DIR, 'css')
 JS_DIR = os.path.join(FRONTEND_DIR, 'js')
 IMG_DIR = os.path.join(FRONTEND_DIR, 'img')
 
-# --- CONFIGURACIÓN DE BASE DE DATOS ---
+# --- CONFIGURACIÓN DE BASE DE DATOS (desde .env) ---
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_NAME")
+
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    "mssql+pymssql://bismar-ac_SQLLogin_1:uex7yg16hs@"
-    "MQ135esp8266.mssql.somee.com/MQ135esp8266"
+    f"mssql+pymssql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {

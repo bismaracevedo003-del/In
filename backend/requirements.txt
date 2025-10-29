@@ -6,3 +6,4 @@ gunicorn
 pymssql
 flask_cors
 dotenv
+python-dotenv

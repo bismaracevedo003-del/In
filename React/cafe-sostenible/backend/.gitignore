@@ -1,0 +1,4 @@
+# Ignorar credenciales y archivos temporales
+.env
+__pycache__/
+*.pyc
